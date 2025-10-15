@@ -12,108 +12,115 @@
     #transformWrapper { transform-origin: 0 0; transition: transform 0.1s linear; }
     #planoImage, #motoresContainer { user-select: none; -webkit-user-drag: none; }
     .motor-marker {
-      position: absolute; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 7px; line-height: 1; cursor: pointer; transform: translate(-50%, -50%);
-      transition: all 0.2s ease; border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 7px; line-height: 1;
+      cursor: pointer;
+      transform: translate(-50%, -50%); transition: all 0.2s ease;
+      border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
     }
-    .motor-marker.completed { background-color: #06B6D4; color: white; }
-    .motor-marker.pending { background-color: #EF4444; color: white; }
-    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; }
-    .motor-marker:hover, .motor-marker.selected { transform: translate(-50%, -50%) scale(1.6); z-index: 20; border-color: #3b82f6; }
+    /* === COLOR CORREGIDO A VERDE LIMA === */
+    .motor-marker.completed { background-color: #A3E635; color: #1a2e05; } /* Verde Lima Brillante */
+    .motor-marker.pending { background-color: #EF4444; color: white; } /* Rojo */
+    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; } /* Amarillo */
+    .motor-marker:hover, .motor-marker.selected { 
+        transform: translate(-50%, -50%) scale(1.6); 
+        z-index: 20; border-color: #3b82f6;
+    }
     #planoContainer.placing-mode, #planoContainer.moving-mode { cursor: crosshair !important; }
     .motor-list-item { cursor: pointer; transition: background-color 0.2s; }
     .motor-list-item:hover, .motor-list-item.selected { background-color: #e2e8f0; }
-    .line-card { transition: transform 0.2s, box-shadow 0.2s; }
-    .line-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
   </style>
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
 <body class="bg-gray-100 min-h-screen">
-
-  <section id="homeScreen">
-    <header class="bg-gradient-to-r from-red-800 to-red-700 text-white shadow-lg">
-      <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+  <header class="bg-gradient-to-r from-red-800 to-red-700 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-4">
         <img src="https://i.ibb.co/Lh1fbHTG/envases.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
         <div>
-          <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Confiabilidad de Motores</h1>
-          <p class="text-sm font-light text-red-100">Líneas de producción (transportes)</p>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight">Confiabilidad de Motores</h1>
+            <p class="hidden md:block text-sm font-light text-red-100">Líneas de producción (transportes)</p>
         </div>
       </div>
-    </header>
-    <main class="max-w-5xl mx-auto p-8">
-      <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">Seleccione una Línea de Producción</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA1')">
-          <img src="https://i.ibb.co/6R5v54Z/Gemini-Generated-Image-3fartz3fartz3far.png" class="w-full h-48 object-cover">
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-slate-900">Línea de Producción 1</h3>
-            <p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 1.</p>
-          </div>
-        </div>
-        <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA2')">
-          <img src="https://i.ibb.co/fzPhZx6/Gemini-Generated-Image-pdm83cpdm83cpdm8.png" class="w-full h-48 object-cover">
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-slate-900">Línea de Producción 2</h3>
-            <p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 2.</p>
-          </div>
-        </div>
-        <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA3')">
-          <img src="https://i.ibb.co/6R5v54Z/Gemini-Generated-Image-3fartz3fartz3far.png" class="w-full h-48 object-cover">
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-slate-900">Línea de Producción 3</h3>
-            <p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 3.</p>
-          </div>
-        </div>
+      <div class="bg-red-600 rounded-xl p-2 md:p-3 shadow-lg">
+        <label class="text-red-100 text-sm font-medium sr-only md:not-sr-only mr-2">Línea:</label>
+        <select id="lineaSelector" class="bg-red-500 text-white font-bold py-2 px-3 rounded-lg border border-red-400">
+          <option value="LINEA1">Línea 1</option> <option value="LINEA2">Línea 2</option> <option value="LINEA3">Línea 3</option>
+        </select>
       </div>
-    </main>
-  </section>
+    </div>
+  </header>
 
-  <div id="mainApp" class="hidden">
-    <header class="bg-gradient-to-r from-red-800 to-red-700 text-white shadow-lg sticky top-0 z-50">
-      <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <img src="https://i.ibb.co/Lh1fbHTG/envases.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
+  <main class="max-w-screen-2xl mx-auto p-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div class="lg:col-span-2 xl:col-span-3">
+        <div class="bg-white rounded-2xl shadow-lg p-3 mb-4 flex justify-between items-center">
           <div>
-              <h1 class="text-xl md:text-2xl font-bold tracking-tight">Confiabilidad de Motores</h1>
-              <p class="hidden md:block text-sm font-light text-red-100">Líneas de producción (transportes)</p>
+            <h2 class="text-lg font-bold text-slate-800" id="lineaTitle"></h2>
+            <p class="text-slate-600 text-xs md:text-sm">Use el botón "Mover" para reubicar marcadores. Use zoom para más precisión.</p>
+          </div>
+          <div id="zoomControls" class="flex items-center gap-2">
+             <span id="zoomLevel" class="text-sm font-semibold text-slate-600 w-16 text-center">100%</span>
+             <button id="zoomOut" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">-</button>
+             <button id="zoomIn" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">+</button>
+             <button id="zoomReset" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">⌂</button>
           </div>
         </div>
-        <button id="btnBackToHome" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg">❮ Cambiar de Línea</button>
-      </div>
-    </header>
-
-    <main class="max-w-screen-2xl mx-auto p-4">
-      <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div class="lg:col-span-2 xl:col-span-3">
-          <div class="bg-white rounded-2xl shadow-lg p-3 mb-4 flex justify-between items-center">
-            <div><h2 class="text-lg font-bold text-slate-800" id="lineaTitle"></h2><p class="text-slate-600 text-xs md:text-sm">Use el botón "Mover" para reubicar marcadores. Use zoom para más precisión.</p></div>
-            <div id="zoomControls" class="flex items-center gap-2">
-               <span id="zoomLevel" class="text-sm font-semibold text-slate-600 w-16 text-center">100%</span>
-               <button id="zoomOut" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">-</button>
-               <button id="zoomIn" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">+</button>
-               <button id="zoomReset" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">⌂</button>
-            </div>
-          </div>
-          <div class="bg-white rounded-2xl shadow-lg overflow-hidden"><div id="planoContainer" class="relative h-[50vh] lg:h-[75vh] overflow-hidden bg-slate-100"><div id="transformWrapper"><img id="planoImage" draggable="false" class="h-auto object-contain min-h-full" src="" alt="Plano de Línea" /><div id="motoresContainer" style="position:absolute; inset:0; pointer-events:none;"></div></div></div></div>
-        </div>
-        <div class="w-full lg:col-span-1 xl:col-span-1 flex flex-col gap-6">
-          <div class="bg-slate-50 rounded-2xl shadow-lg p-4 border"><h3 class="font-bold text-slate-800 text-lg mb-3">Control y Estadísticas</h3><button id="btnCargarDatos" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">🔄 Cargar / Refrescar Datos</button><div id="statusMsg" class="text-sm text-center text-slate-600 mt-2"></div><div id="connBadge" class="mt-3 flex items-center justify-center space-x-2 bg-gray-500 px-3 py-1 rounded-full shadow text-white text-sm"><div class="w-2 h-2 bg-white rounded-full"></div> <span>Desconectado</span></div><div id="statsContainer" class="mt-4 pt-3 border-t space-y-2 text-sm"></div></div>
-          <div class="bg-slate-50 rounded-2xl shadow-lg p-4 border"><h3 class="font-bold text-slate-800 text-lg mb-2">📋 Lista de Motores</h3><input type="text" id="motorSearch" class="w-full border rounded-xl px-4 py-2 text-sm mb-3" placeholder="Buscar por ID o Zona..."><div id="fullMotorList" class="max-h-60 overflow-y-auto pr-2 space-y-1"></div></div>
-          <div id="motorDetailsPanel" class="bg-white rounded-2xl shadow-lg p-4 border hidden">
-            <h3 class="font-bold text-slate-800 text-lg mb-3">⚙️ Detalles: <span id="motorIdTitle" class="text-blue-600"></span></h3>
-            <div class="space-y-3">
-              <div class="text-center bg-slate-100 rounded-lg p-2"><img id="motorImage" class="max-h-32 mx-auto rounded" /><p id="imageCaption" class="text-xs text-slate-500 mt-1 hidden">Clic para ver la placa del motor</p></div>
-              <div><label class="block text-xs font-medium text-slate-700 mb-1">Nombre de Zona:</label><input type="text" id="motorNombreZona" class="w-full border rounded-xl px-3 py-2 text-sm bg-slate-50" readonly /></div>
-              <div><label class="block text-xs font-medium text-slate-700 mb-1">Estado:</label><select id="motorEstado" class="w-full border rounded-xl px-3 py-2 text-sm"></select></div>
-              <div><label class="block text-xs font-medium text-slate-700 mb-1">Observaciones:</label><textarea id="motorObservaciones" rows="2" class="w-full border rounded-xl px-3 py-2 text-sm"></textarea></div>
-              <button id="btnGuardar" class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700">💾 Guardar Cambios</button>
-              <div class="flex gap-2"><button id="btnPlaceMotor" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 text-sm hidden">Colocar Marcador</button><button id="btnMoveMotor" class="w-full bg-yellow-500 text-white py-2 rounded-lg font-semibold hover:bg-yellow-600 text-sm hidden">Mover Marcador</button><button id="btnRemovePlacement" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 text-sm hidden">Quitar Ubicación</button></div>
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div id="planoContainer" class="relative h-[50vh] lg:h-[75vh] overflow-hidden bg-slate-100">
+            <div id="transformWrapper">
+              <img id="planoImage" draggable="false" class="h-auto object-contain min-h-full" src="" alt="Plano de Línea" />
+              <div id="motoresContainer" style="position:absolute; inset:0; pointer-events:none;"></div>
             </div>
           </div>
         </div>
       </div>
-    </main>
-  </div>
+      <div class="w-full lg:col-span-1 xl:col-span-1 flex flex-col gap-6">
+        <div class="bg-slate-50 rounded-2xl shadow-lg p-4 border">
+            <h3 class="font-bold text-slate-800 text-lg mb-3">Control y Estadísticas</h3>
+            <button id="btnCargarDatos" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">🔄 Cargar / Refrescar Datos</button>
+            <div id="statusMsg" class="text-sm text-center text-slate-600 mt-2">Presione "Cargar" para empezar.</div>
+            <div id="connBadge" class="mt-3 flex items-center justify-center space-x-2 bg-gray-500 px-3 py-1 rounded-full shadow text-white text-sm">
+                <div class="w-2 h-2 bg-white rounded-full"></div> <span>Desconectado</span>
+            </div>
+            <div id="statsContainer" class="mt-4 pt-3 border-t space-y-2 text-sm"></div>
+        </div>
+        <div class="bg-slate-50 rounded-2xl shadow-lg p-4 border">
+            <h3 class="font-bold text-slate-800 text-lg mb-2">📋 Lista de Motores</h3>
+            <input type="text" id="motorSearch" class="w-full border rounded-xl px-4 py-2 text-sm mb-3" placeholder="Buscar por ID o Zona...">
+            <div id="fullMotorList" class="max-h-60 overflow-y-auto pr-2 space-y-1"></div>
+        </div>
+        <div id="motorDetailsPanel" class="bg-white rounded-2xl shadow-lg p-4 border hidden">
+          <h3 class="font-bold text-slate-800 text-lg mb-3">⚙️ Detalles: <span id="motorIdTitle" class="text-blue-600"></span></h3>
+          <div class="space-y-3">
+            <div class="text-center bg-slate-100 rounded-lg p-2">
+                <img id="motorImage" class="max-h-32 mx-auto rounded" />
+                <p id="imageCaption" class="text-xs text-slate-500 mt-1 hidden">Clic para ver la placa del motor</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Nombre de Zona:</label>
+              <input type="text" id="motorNombreZona" class="w-full border rounded-xl px-3 py-2 text-sm bg-slate-50" readonly />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Estado:</label>
+              <select id="motorEstado" class="w-full border rounded-xl px-3 py-2 text-sm"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Observaciones:</label>
+              <textarea id="motorObservaciones" rows="2" class="w-full border rounded-xl px-3 py-2 text-sm"></textarea>
+            </div>
+            <button id="btnGuardar" class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700">💾 Guardar Cambios</button>
+            <div class="flex gap-2">
+                <button id="btnPlaceMotor" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 text-sm hidden">Colocar Marcador</button>
+                <button id="btnMoveMotor" class="w-full bg-yellow-500 text-white py-2 rounded-lg font-semibold hover:bg-yellow-600 text-sm hidden">Mover Marcador</button>
+                <button id="btnRemovePlacement" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 text-sm hidden">Quitar Ubicación</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjJ17JRzCssUMC3K3vqdcF5oaixei64Md_1ThCaL3jLlaqubs-ge1FR3kQ8_I3oC8lbw/exec';
@@ -124,15 +131,19 @@
     let scale = 1, panX = 0, panY = 0, isPanning = false, startPanX, startPanY, clickStartX, clickStartY;
 
     document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('lineaSelector').addEventListener('change', cambiarLinea);
         document.getElementById('btnCargarDatos').addEventListener('click', cargarDatos);
         document.getElementById('btnGuardar').addEventListener('click', guardarCambiosMotor);
         document.getElementById('motorSearch').addEventListener('input', filtrarListaMotores);
         document.getElementById('btnPlaceMotor').addEventListener('click', activarModoColocar);
         document.getElementById('btnMoveMotor').addEventListener('click', activarModoMover);
         document.getElementById('btnRemovePlacement').addEventListener('click', quitarUbicacion);
-        document.getElementById('btnBackToHome').addEventListener('click', mostrarHome);
         
-        document.getElementById('motorImage').addEventListener('click', () => { if (motorSeleccionado && motorSeleccionado.ImagenURL && motorSeleccionado.ImagenURL.startsWith('http')) { window.open(motorSeleccionado.ImagenURL, '_blank'); } });
+        document.getElementById('motorImage').addEventListener('click', () => {
+            if (motorSeleccionado && motorSeleccionado.ImagenURL && motorSeleccionado.ImagenURL.startsWith('http')) {
+                window.open(motorSeleccionado.ImagenURL, '_blank');
+            }
+        });
 
         const planoContainer = document.getElementById('planoContainer');
         planoContainer.addEventListener('wheel', handleZoom, { passive: false });
@@ -145,21 +156,9 @@
         document.getElementById('zoomIn').addEventListener('click', () => handleZoom({ preventDefault:()=>{}, deltaY: -120, clientX: planoContainer.clientWidth/2, clientY: planoContainer.clientHeight/2 }));
         document.getElementById('zoomOut').addEventListener('click', () => handleZoom({ preventDefault:()=>{}, deltaY: 120, clientX: planoContainer.clientWidth/2, clientY: planoContainer.clientHeight/2 }));
         document.getElementById('zoomReset').addEventListener('click', resetZoom);
+        
+        cambiarLinea();
     });
-
-    function seleccionarLinea(linea) {
-        document.getElementById('homeScreen').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        document.getElementById('lineaTitle').textContent = `Línea de Producción ${linea.slice(-1)}`;
-        document.getElementById('planoImage').src = PLANOS[linea] || '';
-        resetZoom();
-        cargarDatos(linea);
-    }
-    
-    function mostrarHome() {
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('homeScreen').classList.remove('hidden');
-    }
 
     function applyTransform() { document.getElementById('transformWrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; document.getElementById('zoomLevel').textContent = `${Math.round(scale * 100)}%`; }
     function handleZoom(e) { e.preventDefault(); const oldScale = scale; const zoomFactor = 1.1; scale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor; scale = Math.max(0.2, Math.min(10, scale)); const rect = e.currentTarget.getBoundingClientRect(); const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top; panX = mouseX - (mouseX - panX) * (scale / oldScale); panY = mouseY - (mouseY - panY) * (scale / oldScale); applyTransform(); }
@@ -168,14 +167,15 @@
     function endPan(e) { if (Math.abs(e.clientX - clickStartX) > 5 || Math.abs(e.clientY - clickStartY) > 5) { e.stopPropagation(); } isPanning = false; }
     function resetZoom() { scale = 1; panX = 0; panY = 0; applyTransform(); }
     
+    function cambiarLinea() { const linea = document.getElementById('lineaSelector').value; document.getElementById('lineaTitle').textContent = `Línea de Producción ${linea.slice(-1)}`; document.getElementById('planoImage').src = PLANOS[linea] || ''; resetZoom(); cargarDatos(); }
+    
     async function llamarAppsScript(action, params = {}) { let url = `${APPS_SCRIPT_URL}?action=${action}&${new URLSearchParams(params)}`; return new Promise((resolve, reject) => { const cb = 'c' + Date.now(); window[cb] = d => { delete window[cb]; document.body.removeChild(s); d.success ? resolve(d) : reject(new Error(d.error || 'Error.')); }; const s = document.createElement('script'); s.src = `${url}&callback=${cb}`; s.onerror = () => reject(new Error('Error de red/CORS.')); document.body.appendChild(s); }); }
     async function guardarDatosEnSheet(data) { try { await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); return { success: true }; } catch (error) { return { success: false, error: error.toString() }; } }
-    
-    async function cargarDatos(linea) {
-        if (!linea) return; // No cargar si no hay línea
+    async function cargarDatos() {
         actualizarEstado('Cargando...', 'info');
         document.getElementById('fullMotorList').innerHTML = ''; document.getElementById('motorDetailsPanel').classList.add('hidden');
         try {
+            const linea = document.getElementById('lineaSelector').value;
             const data = await llamarAppsScript('list_motores', { linea });
             motores = data.data.map(m => ({...m, PosX: parseFloat(m.PosX), PosY: parseFloat(m.PosY) }));
             renderizarMotores(); renderizarListaCompleta(); actualizarEstadisticas();
@@ -202,7 +202,7 @@
     }
 
     function renderizarListaCompleta() { const c = document.getElementById('fullMotorList'); c.innerHTML = ''; motores.forEach(m => { const p = !isNaN(m.PosX) && !isNaN(m.PosY); const i = document.createElement('div'); i.className = 'motor-list-item flex items-center justify-between p-2 rounded-md'; i.dataset.motorId = m.ID; i.innerHTML = `<div class="text-sm"><span class="font-bold">${m.ID}</span><span class="text-slate-600 truncate ml-2">${m.NombreZona || 'Sin zona'}</span></div><span class="${p ? 'text-green-500' : 'text-slate-400'}">${p ? '✔' : '✖'}</span>`; i.addEventListener('click', () => seleccionarMotor(m.ID, true)); c.appendChild(i); }); }
-    function actualizarEstadisticas() { const s = motores.reduce((a, m) => { let st = (m.Cumplimiento || '').toString().trim() || 'No'; a[st] = (a[st] || 0) + 1; return a; }, {}); document.getElementById('statsContainer').innerHTML = `<div class="flex justify-between items-center"><span class="font-semibold">Total:</span> <span class="font-bold text-lg">${motores.length}</span></div><hr class="my-2"><div class="flex justify-between items-center"><span class="text-cyan-500 font-semibold">● Cumplen:</span> <span class="font-bold">${s['Sí'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-red-600 font-semibold">● Pendientes:</span> <span class="font-bold">${s['No'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-yellow-500 font-semibold">● Mantenimiento:</span> <span class="font-bold">${s['En Mantenimiento'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-blue-600 font-semibold">● En Proceso:</span> <span class="font-bold">${s['En Proceso'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-gray-500 font-semibold">● N/A:</span> <span class="font-bold">${s['N/A'] || 0}</span></div>`; }
+    function actualizarEstadisticas() { const s = motores.reduce((a, m) => { let st = (m.Cumplimiento || '').toString().trim() || 'No'; a[st] = (a[st] || 0) + 1; return a; }, {}); document.getElementById('statsContainer').innerHTML = `<div class="flex justify-between items-center"><span class="font-semibold">Total:</span> <span class="font-bold text-lg">${motores.length}</span></div><hr class="my-2"><div class="flex justify-between items-center"><span class="text-lime-500 font-semibold">● Cumplen:</span> <span class="font-bold">${s['Sí'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-red-600 font-semibold">● Pendientes:</span> <span class="font-bold">${s['No'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-yellow-500 font-semibold">● Mantenimiento:</span> <span class="font-bold">${s['En Mantenimiento'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-blue-600 font-semibold">● En Proceso:</span> <span class="font-bold">${s['En Proceso'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-gray-500 font-semibold">● N/A:</span> <span class="font-bold">${s['N/A'] || 0}</span></div>`; }
     function filtrarListaMotores(e) { const f = e.target.value.toLowerCase(); document.querySelectorAll('.motor-list-item').forEach(i => { i.style.display = i.textContent.toLowerCase().includes(f) ? 'flex' : 'none'; }); }
 
     function seleccionarMotor(motorId, scrollPanel = false) {
@@ -287,4 +287,3 @@
   </script>
 </body>
 </html>
-
