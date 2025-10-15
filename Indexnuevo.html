@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Confiabilidad de Motores</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    #planoContainer { touch-action: none; cursor: grab; user-select: none; }
+    #planoContainer:active { cursor: grabbing; }
+    #transformWrapper { transform-origin: 0 0; transition: transform 0.1s linear; }
+    #planoImage, #motoresContainer { user-select: none; -webkit-user-drag: none; }
+    .motor-marker {
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 7px; line-height: 1;
+      cursor: pointer; transform: translate(-50%, -50%);
+      transition: all 0.2s ease; border: 1px solid white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      z-index: 10;
+    }
+    .motor-marker.completed { background-color: #10B981; color: white; }
+    .motor-marker.pending { background-color: #EF4444; color: white; }
+    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; }
+    .motor-marker:hover, .motor-marker.selected { 
+        transform: translate(-50%, -50%) scale(1.6); 
+        z-index: 20; border-color: #3b82f6;
+    }
+    #planoContainer.placing-mode, #planoContainer.moving-mode { cursor: crosshair !important; }
+    .motor-list-item { cursor: pointer; transition: background-color 0.2s; }
+    .motor-list-item:hover, .motor-list-item.selected { background-color: #e2e8f0; }
+  </style>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <header class="bg-gradient-to-r from-red-800 to-red-700 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="https://i.ibb.co/Lh1fbHTG/envases.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
+        <div>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight">Confiabilidad de Motores</h1>
+            <p class="hidden md:block text-sm font-light text-red-100">Líneas de producción (transportes)</p>
+        </div>
+      </div>
+      <div class="bg-red-600 rounded-xl p-2 md:p-3 shadow-lg">
+        <label class="text-red-100 text-sm font-medium sr-only md:not-sr-only mr-2">Línea:</label>
+        <select id="lineaSelector" class="bg-red-500 text-white font-bold py-2 px-3 rounded-lg border border-red-400">
+          <option value="LINEA1">Línea 1</option> <option value="LINEA2">Línea 2</option> <option value="LINEA3">Línea 3</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-screen-2xl mx-auto p-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      
+      <div class="lg:col-span-2 xl:col-span-3">
+        <div class="bg-white rounded-2xl shadow-lg p-3 mb-4 flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800" id="lineaTitle"></h2>
+            <p class="text-slate-600 text-xs md:text-sm">Use la rueda del ratón/gestos para zoom, arrastre para mover.</p>
+          </div>
+          <div id="zoomControls" class="flex items-center gap-2">
+             <span id="zoomLevel" class="text-sm font-semibold text-slate-600 w-16 text-center">100%</span>
+             <button id="zoomOut" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">-</button>
+             <button id="zoomIn" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">+</button>
+             <button id="zoomReset" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">⌂</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div id="planoContainer" class="relative h-[50vh] lg:h-[75vh] overflow-hidden bg-slate-100">
+            <div id="transformWrapper">
+              <img id="planoImage" draggable="false" class="h-auto object-contain min-h-full" src="" alt="Plano de Línea" />
+              <div id="motoresContainer" style="position:absolute; inset:0; pointer-events:none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full lg:col-span-1 xl:col-span-1 flex flex-col gap-6">
+        <div class="bg-slate-50 rounded-2xl shadow-lg p-4 border">
+            <h3 class="font-bold text-slate-800 text-lg mb-3">Control y Estadísticas</h3>
+            <button id="btnCargarDatos" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">🔄 Cargar / Refrescar Datos</button>
+            <div id="statusMsg" class="text-sm text-center text-slate-600 mt-2">Presione "Cargar" para empezar.</div>
+            <div id="connBadge" class="mt-3 flex items-center justify-center space-x-2 bg-gray-500 px-3 py-1 rounded-full shadow text-white text-sm">
+                <div class="w-2 h-2 bg-white rounded-full"></div> <span>Desconectado</span>
+            </div>
+            <div id="statsContainer" class="mt-4 pt-3 border-t space-y-2 text-sm"></div>
+        </div>
+        
+        <div class="bg-slate-50 rounded-2xl shadow-lg p-4 border">
+            <h3 class="font-bold text-slate-800 text-lg mb-2">📋 Lista de Motores</h3>
+            <input type="text" id="motorSearch" class="w-full border rounded-xl px-4 py-2 text-sm mb-3" placeholder="Buscar por ID o Zona...">
+            <div id="fullMotorList" class="max-h-60 overflow-y-auto pr-2 space-y-1"></div>
+        </div>
+
+        <div id="motorDetailsPanel" class="bg-white rounded-2xl shadow-lg p-4 border hidden">
+          <h3 class="font-bold text-slate-800 text-lg mb-3">⚙️ Detalles: <span id="motorIdTitle" class="text-blue-600"></span></h3>
+          <div class="space-y-3">
+            <div class="text-center bg-slate-100 rounded-lg p-2"><img id="motorImage" class="max-h-32 mx-auto rounded cursor-pointer" /></div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Nombre de Zona:</label>
+              <input type="text" id="motorNombreZona" class="w-full border rounded-xl px-3 py-2 text-sm bg-slate-50" readonly />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Estado:</label>
+              <select id="motorEstado" class="w-full border rounded-xl px-3 py-2 text-sm"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Observaciones:</label>
+              <textarea id="motorObservaciones" rows="2" class="w-full border rounded-xl px-3 py-2 text-sm"></textarea>
+            </div>
+            <button id="btnGuardar" class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700">💾 Guardar Cambios</button>
+            <div class="flex gap-2">
+                <button id="btnPlaceMotor" class="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 text-sm hidden">Colocar</button>
+                <button id="btnMoveMotor" class="w-full bg-yellow-500 text-white py-2 rounded-lg font-semibold hover:bg-yellow-600 text-sm hidden">Mover</button>
+                <button id="btnRemovePlacement" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 text-sm hidden">Quitar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjJ17JRzCssUMC3K3vqdcF5oaixei64Md_1ThCaL3jLlaqubs-ge1FR3kQ8_I3oC8lbw/exec';
+    const PLANOS = { 'LINEA1': 'https://i.ibb.co/mFgffqxP/PLANO1.jpg', 'LINEA2': 'https://i.ibb.co/HTb9Vwph/PLANO2.jpg', 'LINEA3': 'https://i.ibb.co/ns0DSD90/PLANO3.jpg' };
+    const ESTADOS_CUMPLIMIENTO = ['Sí', 'No', 'En Mantenimiento', 'En Proceso', 'N/A'];
+    
+    let motores = [], motorSeleccionado = null, modoPosicionar = false;
+    let scale = 1, panX = 0, panY = 0, isPanning = false, startPanX, startPanY, clickStartX, clickStartY;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('lineaSelector').addEventListener('change', cambiarLinea);
+        document.getElementById('btnCargarDatos').addEventListener('click', cargarDatos);
+        document.getElementById('btnGuardar').addEventListener('click', guardarCambiosMotor);
+        document.getElementById('motorImage').addEventListener('click', () => motorSeleccionado?.ImagenURL && window.open(motorSeleccionado.ImagenURL, '_blank'));
+        document.getElementById('motorSearch').addEventListener('input', filtrarListaMotores);
+        document.getElementById('btnPlaceMotor').addEventListener('click', activarModoColocar);
+        document.getElementById('btnMoveMotor').addEventListener('click', activarModoColocar);
+        document.getElementById('btnRemovePlacement').addEventListener('click', quitarUbicacion);
+
+        const planoContainer = document.getElementById('planoContainer');
+        planoContainer.addEventListener('wheel', handleZoom, { passive: false });
+        planoContainer.addEventListener('mousedown', startPan);
+        planoContainer.addEventListener('mousemove', handlePan);
+        planoContainer.addEventListener('mouseup', endPan);
+        planoContainer.addEventListener('mouseleave', endPan);
+        planoContainer.addEventListener('click', manejarClicPlano, true);
+
+        document.getElementById('zoomIn').addEventListener('click', () => handleZoom({ preventDefault:()=>{}, deltaY: -120, clientX: planoContainer.clientWidth/2, clientY: planoContainer.clientHeight/2 }));
+        document.getElementById('zoomOut').addEventListener('click', () => handleZoom({ preventDefault:()=>{}, deltaY: 120, clientX: planoContainer.clientWidth/2, clientY: planoContainer.clientHeight/2 }));
+        document.getElementById('zoomReset').addEventListener('click', resetZoom);
+        
+        cambiarLinea();
+    });
+
+    function applyTransform() {
+        document.getElementById('transformWrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        document.getElementById('zoomLevel').textContent = `${Math.round(scale * 100)}%`;
+    }
+    function handleZoom(e) {
+        e.preventDefault(); const oldScale = scale; const zoomFactor = 1.1;
+        scale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
+        scale = Math.max(0.2, Math.min(10, scale));
+        const rect = e.currentTarget.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top;
+        panX = mouseX - (mouseX - panX) * (scale / oldScale);
+        panY = mouseY - (mouseY - panY) * (scale / oldScale);
+        applyTransform();
+    }
+    function startPan(e) {
+        if (e.target.classList.contains('motor-marker')) return;
+        isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY;
+        clickStartX = e.clientX; clickStartY = e.clientY;
+    }
+    function handlePan(e) { if (!isPanning) return; panX = e.clientX - startPanX; panY = e.clientY - startPanY; applyTransform(); }
+    function endPan(e) { if (Math.abs(e.clientX - clickStartX) > 5 || Math.abs(e.clientY - clickStartY) > 5) { e.stopPropagation(); } isPanning = false; }
+    function resetZoom() { scale = 1; panX = 0; panY = 0; applyTransform(); }
+    
+    function cambiarLinea() {
+      const linea = document.getElementById('lineaSelector').value;
+      document.getElementById('lineaTitle').textContent = `Línea de Producción ${linea.slice(-1)}`;
+      document.getElementById('planoImage').src = PLANOS[linea] || '';
+      resetZoom(); cargarDatos();
+    }
+    
+    async function llamarAppsScript(action, params = {}) {
+        let url = `${APPS_SCRIPT_URL}?action=${action}&${new URLSearchParams(params)}`;
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Date.now();
+            window[callbackName] = data => {
+                delete window[callbackName]; document.body.removeChild(script);
+                data.success ? resolve(data) : reject(new Error(data.error || 'Error.'));
+            };
+            const script = document.createElement('script');
+            script.src = `${url}&callback=${callbackName}`;
+            script.onerror = () => reject(new Error('Error de red/CORS.'));
+            document.body.appendChild(script);
+        });
+    }
+
+    async function guardarDatosEnSheet(data) {
+        try { await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); return { success: true };
+        } catch (error) { return { success: false, error: error.toString() }; }
+    }
+
+    async function cargarDatos() {
+        actualizarEstado('Cargando...', 'info');
+        document.getElementById('fullMotorList').innerHTML = '';
+        document.getElementById('motorDetailsPanel').classList.add('hidden');
+        try {
+            const linea = document.getElementById('lineaSelector').value;
+            const data = await llamarAppsScript('list_motores', { linea });
+            motores = data.data.map(m => ({...m, PosX: parseFloat(m.PosX), PosY: parseFloat(m.PosY) }));
+            renderizarMotores(); renderizarListaCompleta(); actualizarEstadisticas();
+            actualizarEstado(`✅ ${motores.length} motores cargados.`, 'success');
+            const badge = document.getElementById('connBadge');
+            badge.className = 'mt-3 flex items-center justify-center space-x-2 bg-green-600 px-3 py-1 rounded-full shadow text-white text-sm';
+            badge.querySelector('span').textContent = 'Conectado';
+        } catch (error) { actualizarEstado(`❌ Error: ${error.message}`, 'error'); }
+    }
+
+    function renderizarMotores() {
+        const contenedor = document.getElementById('motoresContainer');
+        contenedor.innerHTML = '';
+        motores.filter(m => !isNaN(m.PosX) && !isNaN(m.PosY)).forEach(motor => {
+            const marcador = document.createElement('div');
+            marcador.className = 'motor-marker';
+            if (motor.Cumplimiento === 'Sí') marcador.classList.add('completed');
+            else if (motor.Cumplimiento === 'En Mantenimiento') marcador.classList.add('maintenance');
+            else marcador.classList.add('pending');
+            marcador.style.left = `${motor.PosX}%`; marcador.style.top = `${motor.PosY}%`;
+            marcador.textContent = motor.ID.replace(/\D/g, '');
+            marcador.title = `${motor.ID}: ${motor.NombreZona}`;
+            marcador.dataset.id = motor.ID;
+            marcador.style.pointerEvents = 'auto';
+            marcador.addEventListener('mousedown', e => e.stopPropagation());
+            marcador.addEventListener('click', e => { e.stopPropagation(); seleccionarMotor(motor.ID); });
+            contenedor.appendChild(marcador);
+        });
+    }
+
+    function renderizarListaCompleta() {
+        const listaContenedor = document.getElementById('fullMotorList');
+        listaContenedor.innerHTML = '';
+        motores.forEach(motor => {
+            const isPlaced = !isNaN(motor.PosX) && !isNaN(motor.PosY);
+            const item = document.createElement('div');
+            item.className = 'motor-list-item flex items-center justify-between p-2 rounded-md';
+            item.dataset.motorId = motor.ID;
+            item.innerHTML = `<div class="text-sm"><span class="font-bold">${motor.ID}</span><span class="text-slate-600 truncate ml-2">${motor.NombreZona || 'Sin zona'}</span></div><span class="${isPlaced ? 'text-green-500' : 'text-slate-400'}">${isPlaced ? '✔' : '✖'}</span>`;
+            item.addEventListener('click', () => seleccionarMotor(motor.ID));
+            listaContenedor.appendChild(item);
+        });
+    }
+    
+    function actualizarEstadisticas() {
+        const stats = motores.reduce((acc, motor) => {
+            // **FIX PARA ESTADÍSTICAS:** Limpiar el valor y asignar 'No' si está vacío.
+            let status = (motor.Cumplimiento || '').toString().trim();
+            if (status === '') {
+                status = 'No';
+            }
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+        }, {});
+
+        document.getElementById('statsContainer').innerHTML = `
+            <div class="flex justify-between items-center"><span class="font-semibold">Total:</span> <span class="font-bold text-lg">${motores.length}</span></div><hr class="my-2">
+            <div class="flex justify-between items-center"><span class="text-green-600 font-semibold">● Cumplen:</span> <span class="font-bold">${stats['Sí'] || 0}</span></div>
+            <div class="flex justify-between items-center"><span class="text-red-600 font-semibold">● Pendientes:</span> <span class="font-bold">${stats['No'] || 0}</span></div>
+            <div class="flex justify-between items-center"><span class="text-yellow-500 font-semibold">● Mantenimiento:</span> <span class="font-bold">${stats['En Mantenimiento'] || 0}</span></div>
+            <div class="flex justify-between items-center"><span class="text-blue-600 font-semibold">● En Proceso:</span> <span class="font-bold">${stats['En Proceso'] || 0}</span></div>
+            <div class="flex justify-between items-center"><span class="text-gray-500 font-semibold">● N/A:</span> <span class="font-bold">${stats['N/A'] || 0}</span></div>`;
+    }
+
+    function filtrarListaMotores(e) {
+        const filtro = e.target.value.toLowerCase();
+        document.querySelectorAll('.motor-list-item').forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(filtro) ? 'flex' : 'none';
+        });
+    }
+
+    function seleccionarMotor(motorId) {
+        motorSeleccionado = motores.find(m => m.ID === motorId);
+        if (!motorSeleccionado) return;
+        document.querySelectorAll('.motor-marker, .motor-list-item').forEach(m => m.classList.remove('selected'));
+        document.querySelector(`.motor-marker[data-id="${motorId}"]`)?.classList.add('selected');
+        document.querySelector(`.motor-list-item[data-motor-id="${motorId}"]`)?.classList.add('selected');
+        const panel = document.getElementById('motorDetailsPanel');
+        panel.classList.remove('hidden'); panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        panel.querySelector('#motorIdTitle').textContent = motorSeleccionado.ID;
+        panel.querySelector('#motorNombreZona').value = motorSeleccionado.NombreZona || '';
+        panel.querySelector('#motorEstado').innerHTML = ESTADOS_CUMPLIMIENTO.map(e => `<option value="${e}" ${e === (motorSeleccionado.Cumplimiento || 'No') ? 'selected' : ''}>${e}</option>`).join('');
+        panel.querySelector('#motorObservaciones').value = motorSeleccionado.Observaciones || '';
+        let imgUrl = motorSeleccionado.ImagenURL || '';
+        if (imgUrl.includes('drive.google.com')) {
+            const fileId = (imgUrl.match(/d\/(.+?)\//) || [])[1];
+            imgUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : '';
+        }
+        panel.querySelector('#motorImage').src = imgUrl || 'https://via.placeholder.com/300x100?text=Sin+Imagen';
+        const isPlaced = !isNaN(motorSeleccionado.PosX) && !isNaN(motorSeleccionado.PosY);
+        document.getElementById('btnPlaceMotor').classList.toggle('hidden', isPlaced);
+        document.getElementById('btnMoveMotor').classList.toggle('hidden', !isPlaced);
+        document.getElementById('btnRemovePlacement').classList.toggle('hidden', !isPlaced);
+    }
+
+    function activarModoColocar() {
+        if (!motorSeleccionado) return; modoPosicionar = true;
+        const modeText = document.getElementById('btnMoveMotor').classList.contains('hidden') ? 'COLOCAR' : 'MOVER';
+        document.getElementById('planoContainer').classList.add(modeText === 'MOVER' ? 'moving-mode' : 'placing-mode');
+        actualizarEstado(`MODO ${modeText}: Haga clic en la ubicación para ${motorSeleccionado.ID}.`, 'info');
+    }
+
+    async function quitarUbicacion() {
+        if (!motorSeleccionado || !confirm(`¿Quitar la ubicación del motor ${motorSeleccionado.ID}?`)) return;
+        actualizarEstado(`Quitando ubicación de ${motorSeleccionado.ID}...`, 'info');
+        await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorSeleccionado.ID, data: { PosX: '', PosY: '' } });
+        await cargarDatos();
+        actualizarEstado(`✅ Ubicación eliminada.`, 'success');
+    }
+
+    async function manejarClicPlano(e) {
+        if (!modoPosicionar || !motorSeleccionado) return;
+        const container = document.getElementById('planoContainer');
+        const rect = container.getBoundingClientRect();
+        
+        // **FÓRMULA DE ALTA PRECISIÓN**
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const x_on_image = (mouseX - panX) / scale;
+        const y_on_image = (mouseY - panY) / scale;
+        const x_perc = (x_on_image / container.clientWidth) * 100;
+        const y_perc = (y_on_image / container.clientHeight) * 100;
+
+        if (x_perc < 0 || x_perc > 100 || y_perc < 0 || y_perc > 100) { alert("Posición fuera del plano."); return; }
+        
+        actualizarEstado(`Guardando ubicación para ${motorSeleccionado.ID}...`, 'info');
+        await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorSeleccionado.ID, data: { PosX: x_perc.toFixed(2), PosY: y_perc.toFixed(2) } });
+        await cargarDatos(); seleccionarMotor(motorSeleccionado.ID);
+        actualizarEstado(`✅ Ubicación guardada.`, 'success');
+        modoPosicionar = false;
+        document.getElementById('planoContainer').classList.remove('placing-mode', 'moving-mode');
+    }
+
+    async function guardarCambiosMotor() {
+        if (!motorSeleccionado) return;
+        actualizarEstado(`Guardando cambios para ${motorSeleccionado.ID}...`, 'info');
+        const newData = { Cumplimiento: document.getElementById('motorEstado').value, Observaciones: document.getElementById('motorObservaciones').value };
+        await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorSeleccionado.ID, data: newData });
+        Object.assign(motorSeleccionado, newData);
+        renderizarMotores(); renderizarListaCompleta(); actualizarEstadisticas();
+        seleccionarMotor(motorSeleccionado.ID);
+        actualizarEstado(`✅ Cambios guardados.`, 'success');
+    }
+    
+    function actualizarEstado(mensaje, tipo) {
+        const el = document.getElementById('statusMsg');
+        el.textContent = mensaje; el.className = 'text-sm text-center font-semibold ';
+        if (tipo === 'success') el.classList.add('text-green-600');
+        else if (tipo === 'error') el.classList.add('text-red-600');
+        else el.classList.add('text-blue-600');
+    }
+  </script>
+</body>
+</html>
