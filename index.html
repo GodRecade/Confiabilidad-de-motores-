@@ -94,9 +94,8 @@
           <h3 class="font-bold text-slate-800 text-lg mb-3">⚙️ Detalles: <span id="motorIdTitle" class="text-blue-600"></span></h3>
           <div class="space-y-3">
             <div class="text-center bg-slate-100 rounded-lg p-2">
-                <a id="motorImageLink" href="#" target="_blank" rel="noopener noreferrer">
-                    <img id="motorImage" class="max-h-32 mx-auto rounded cursor-pointer" />
-                </a>
+                <img id="motorImage" class="max-h-32 mx-auto rounded" />
+                <p id="imageCaption" class="text-xs text-slate-500 mt-1 hidden">Clic para ver la placa del motor</p>
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1">Nombre de Zona:</label>
@@ -138,6 +137,13 @@
         document.getElementById('btnPlaceMotor').addEventListener('click', activarModoColocar);
         document.getElementById('btnMoveMotor').addEventListener('click', activarModoMover);
         document.getElementById('btnRemovePlacement').addEventListener('click', quitarUbicacion);
+        
+        // **LISTENER CORREGIDO**
+        document.getElementById('motorImage').addEventListener('click', () => {
+            if (motorSeleccionado && motorSeleccionado.ImagenURL && motorSeleccionado.ImagenURL.startsWith('http')) {
+                window.open(motorSeleccionado.ImagenURL, '_blank');
+            }
+        });
 
         const planoContainer = document.getElementById('planoContainer');
         planoContainer.addEventListener('wheel', handleZoom, { passive: false });
@@ -212,22 +218,27 @@
         panel.querySelector('#motorEstado').innerHTML = ESTADOS_CUMPLIMIENTO.map(e => `<option value="${e}" ${e === (motorSeleccionado.Cumplimiento || 'No') ? 'selected' : ''}>${e}</option>`).join('');
         panel.querySelector('#motorObservaciones').value = motorSeleccionado.Observaciones || '';
         
-        const imageLink = panel.querySelector('#motorImageLink');
         const imageEl = panel.querySelector('#motorImage');
+        const imageCaption = panel.querySelector('#imageCaption');
         let originalUrl = motorSeleccionado.ImagenURL || '';
         let previewUrl = 'https://via.placeholder.com/300x100?text=Sin+Imagen';
 
         if (originalUrl.includes('drive.google.com')) {
             const fileId = (originalUrl.match(/d\/(.+?)\//) || [])[1];
-            if (fileId) {
-                previewUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-            }
+            if (fileId) { previewUrl = `https://drive.google.com/uc?export=view&id=${fileId}`; }
         } else if (originalUrl.startsWith('http')) {
             previewUrl = originalUrl;
         }
         
-        imageLink.href = originalUrl.startsWith('http') ? originalUrl : '#';
         imageEl.src = previewUrl;
+        
+        if (originalUrl.startsWith('http')) {
+            imageCaption.classList.remove('hidden');
+            imageEl.classList.add('cursor-pointer');
+        } else {
+            imageCaption.classList.add('hidden');
+            imageEl.classList.remove('cursor-pointer');
+        }
         
         const isPlaced = !isNaN(motorSeleccionado.PosX) && !isNaN(motorSeleccionado.PosY);
         document.getElementById('btnPlaceMotor').classList.toggle('hidden', isPlaced);
@@ -275,3 +286,4 @@
   </script>
 </body>
 </html>
+
