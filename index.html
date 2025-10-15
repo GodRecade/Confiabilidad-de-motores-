@@ -15,7 +15,7 @@
       position: absolute; width: 14px; height: 14px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-weight: bold; font-size: 7px; line-height: 1;
-      cursor: grab; /* Cambiado a grab para indicar que se puede arrastrar */
+      cursor: grab;
       transform: translate(-50%, -50%); transition: all 0.2s ease;
       border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
     }
@@ -27,7 +27,8 @@
     .motor-marker.pending { background-color: #EF4444; color: white; }
     .motor-marker.maintenance { background-color: #FBBF24; color: #422006; }
     .motor-marker:hover, .motor-marker.selected { 
-        transform: translate(-50%, -50%) scale(1.6); z-index: 20; border-color: #3b82f6;
+        transform: translate(-50%, -50%) scale(1.6); 
+        z-index: 20; border-color: #3b82f6;
     }
     #planoContainer.placing-mode { cursor: crosshair !important; }
     .motor-list-item { cursor: pointer; transition: background-color 0.2s; }
@@ -152,10 +153,7 @@
         cambiarLinea();
     });
 
-    function applyTransform() {
-        document.getElementById('transformWrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-        document.getElementById('zoomLevel').textContent = `${Math.round(scale * 100)}%`;
-    }
+    function applyTransform() { document.getElementById('transformWrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; document.getElementById('zoomLevel').textContent = `${Math.round(scale * 100)}%`; }
     function handleZoom(e) { e.preventDefault(); const oldScale = scale; const zoomFactor = 1.1; scale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor; scale = Math.max(0.2, Math.min(10, scale)); const rect = e.currentTarget.getBoundingClientRect(); const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top; panX = mouseX - (mouseX - panX) * (scale / oldScale); panY = mouseY - (mouseY - panY) * (scale / oldScale); applyTransform(); }
     function startPan(e) { if (isDraggingMarker) return; isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY; clickStartX = e.clientX; clickStartY = e.clientY; }
     function handlePan(e) { if (isPanning) { panX = e.clientX - startPanX; panY = e.clientY - startPanY; applyTransform(); } else if (isDraggingMarker) { handleMarkerDrag(e); } }
@@ -168,8 +166,7 @@
     async function guardarDatosEnSheet(data) { try { await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); return { success: true }; } catch (error) { return { success: false, error: error.toString() }; } }
     async function cargarDatos() {
         actualizarEstado('Cargando...', 'info');
-        document.getElementById('fullMotorList').innerHTML = '';
-        document.getElementById('motorDetailsPanel').classList.add('hidden');
+        document.getElementById('fullMotorList').innerHTML = ''; document.getElementById('motorDetailsPanel').classList.add('hidden');
         try {
             const linea = document.getElementById('lineaSelector').value;
             const data = await llamarAppsScript('list_motores', { linea });
@@ -183,39 +180,42 @@
     }
 
     function renderizarMotores() {
-        const contenedor = document.getElementById('motoresContainer');
-        contenedor.innerHTML = '';
+        const contenedor = document.getElementById('motoresContainer'); contenedor.innerHTML = '';
         motores.filter(m => !isNaN(m.PosX) && !isNaN(m.PosY)).forEach(motor => {
-            const marcador = document.createElement('div');
-            marcador.className = 'motor-marker';
+            const marcador = document.createElement('div'); marcador.className = 'motor-marker';
             if (motor.Cumplimiento === 'Sí') marcador.classList.add('completed');
             else if (motor.Cumplimiento === 'En Mantenimiento') marcador.classList.add('maintenance');
             else marcador.classList.add('pending');
             marcador.style.left = `${motor.PosX}%`; marcador.style.top = `${motor.PosY}%`;
-            marcador.textContent = motor.ID.replace(/\D/g, '');
-            marcador.title = `${motor.ID}: ${motor.NombreZona}`;
-            marcador.dataset.id = motor.ID;
-            marcador.style.pointerEvents = 'auto';
+            marcador.textContent = motor.ID.replace(/\D/g, ''); marcador.title = `${motor.ID}: ${motor.NombreZona}`;
+            marcador.dataset.id = motor.ID; marcador.style.pointerEvents = 'auto';
             marcador.addEventListener('mousedown', startMarkerDrag);
-            marcador.addEventListener('click', e => { e.stopPropagation(); }); // Previene que un clic en el mapa se dispare despues de arrastrar
+            marcador.addEventListener('click', e => { e.stopPropagation(); seleccionarMotor(motor.ID, false); });
             contenedor.appendChild(marcador);
         });
     }
 
-    function renderizarListaCompleta() { const c = document.getElementById('fullMotorList'); c.innerHTML = ''; motores.forEach(m => { const p = !isNaN(m.PosX) && !isNaN(m.PosY); const i = document.createElement('div'); i.className = 'motor-list-item flex items-center justify-between p-2 rounded-md'; i.dataset.motorId = m.ID; i.innerHTML = `<div class="text-sm"><span class="font-bold">${m.ID}</span><span class="text-slate-600 truncate ml-2">${m.NombreZona || 'Sin zona'}</span></div><span class="${p ? 'text-green-500' : 'text-slate-400'}">${p ? '✔' : '✖'}</span>`; i.addEventListener('click', () => seleccionarMotor(m.ID)); c.appendChild(i); }); }
+    function renderizarListaCompleta() { const c = document.getElementById('fullMotorList'); c.innerHTML = ''; motores.forEach(m => { const p = !isNaN(m.PosX) && !isNaN(m.PosY); const i = document.createElement('div'); i.className = 'motor-list-item flex items-center justify-between p-2 rounded-md'; i.dataset.motorId = m.ID; i.innerHTML = `<div class="text-sm"><span class="font-bold">${m.ID}</span><span class="text-slate-600 truncate ml-2">${m.NombreZona || 'Sin zona'}</span></div><span class="${p ? 'text-green-500' : 'text-slate-400'}">${p ? '✔' : '✖'}</span>`; i.addEventListener('click', () => seleccionarMotor(m.ID, true)); c.appendChild(i); }); }
     function actualizarEstadisticas() { const s = motores.reduce((a, m) => { let st = (m.Cumplimiento || '').toString().trim() || 'No'; a[st] = (a[st] || 0) + 1; return a; }, {}); document.getElementById('statsContainer').innerHTML = `<div class="flex justify-between items-center"><span class="font-semibold">Total:</span> <span class="font-bold text-lg">${motores.length}</span></div><hr class="my-2"><div class="flex justify-between items-center"><span class="text-green-600 font-semibold">● Cumplen:</span> <span class="font-bold">${s['Sí'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-red-600 font-semibold">● Pendientes:</span> <span class="font-bold">${s['No'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-yellow-500 font-semibold">● Mantenimiento:</span> <span class="font-bold">${s['En Mantenimiento'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-blue-600 font-semibold">● En Proceso:</span> <span class="font-bold">${s['En Proceso'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-gray-500 font-semibold">● N/A:</span> <span class="font-bold">${s['N/A'] || 0}</span></div>`; }
     function filtrarListaMotores(e) { const f = e.target.value.toLowerCase(); document.querySelectorAll('.motor-list-item').forEach(i => { i.style.display = i.textContent.toLowerCase().includes(f) ? 'flex' : 'none'; }); }
 
-    function seleccionarMotor(motorId) {
+    // **FUNCIÓN CORREGIDA**
+    function seleccionarMotor(motorId, scrollPanel = false) {
         motorSeleccionado = motores.find(m => m.ID === motorId); if (!motorSeleccionado) return;
         document.querySelectorAll('.motor-marker, .motor-list-item').forEach(m => m.classList.remove('selected'));
         document.querySelector(`.motor-marker[data-id="${motorId}"]`)?.classList.add('selected');
         document.querySelector(`.motor-list-item[data-motor-id="${motorId}"]`)?.classList.add('selected');
-        const p = document.getElementById('motorDetailsPanel'); p.classList.remove('hidden'); p.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        p.querySelector('#motorIdTitle').textContent = motorSeleccionado.ID; p.querySelector('#motorNombreZona').value = motorSeleccionado.NombreZona || '';
-        p.querySelector('#motorEstado').innerHTML = ESTADOS_CUMPLIMIENTO.map(e => `<option value="${e}" ${e === (motorSeleccionado.Cumplimiento || 'No') ? 'selected' : ''}>${e}</option>`).join('');
-        p.querySelector('#motorObservaciones').value = motorSeleccionado.Observaciones || '';
-        let imgUrl = motorSeleccionado.ImagenURL || ''; if (imgUrl.includes('drive.google.com')) { const fileId = (imgUrl.match(/d\/(.+?)\//) || [])[1]; imgUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : ''; } p.querySelector('#motorImage').src = imgUrl || 'https://via.placeholder.com/300x100?text=Sin+Imagen';
+        const panel = document.getElementById('motorDetailsPanel'); panel.classList.remove('hidden'); 
+        
+        // **LÓGICA CORREGIDA**: Solo hacer scroll si se llama desde la lista.
+        if (scrollPanel) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+        
+        panel.querySelector('#motorIdTitle').textContent = motorSeleccionado.ID; panel.querySelector('#motorNombreZona').value = motorSeleccionado.NombreZona || '';
+        panel.querySelector('#motorEstado').innerHTML = ESTADOS_CUMPLIMIENTO.map(e => `<option value="${e}" ${e === (motorSeleccionado.Cumplimiento || 'No') ? 'selected' : ''}>${e}</option>`).join('');
+        panel.querySelector('#motorObservaciones').value = motorSeleccionado.Observaciones || '';
+        let imgUrl = motorSeleccionado.ImagenURL || ''; if (imgUrl.includes('drive.google.com')) { const fileId = (imgUrl.match(/d\/(.+?)\//) || [])[1]; imgUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : ''; } panel.querySelector('#motorImage').src = imgUrl || 'https://via.placeholder.com/300x100?text=Sin+Imagen';
         const isPlaced = !isNaN(motorSeleccionado.PosX) && !isNaN(motorSeleccionado.PosY);
         document.getElementById('btnPlaceMotor').classList.toggle('hidden', isPlaced);
         document.getElementById('btnRemovePlacement').classList.toggle('hidden', !isPlaced);
@@ -223,7 +223,8 @@
 
     function startMarkerDrag(e) {
         e.stopPropagation(); isDraggingMarker = true; draggedMarker = e.currentTarget;
-        draggedMarker.classList.add('dragging'); seleccionarMotor(draggedMarker.dataset.id);
+        draggedMarker.classList.add('dragging'); 
+        seleccionarMotor(draggedMarker.dataset.id, false); // **CORREGIDO**: No hacer scroll al arrastrar
         document.addEventListener('mouseup', endMarkerDrag, { once: true });
     }
     function handleMarkerDrag(e) {
@@ -233,16 +234,16 @@
         const y = ((e.clientY - rect.top - panY) / scale) / (rect.height / 100);
         draggedMarker.style.left = `${x}%`; draggedMarker.style.top = `${y}%`;
     }
-    async function endMarkerDrag(e) {
+    async function endMarkerDrag() {
         if (!isDraggingMarker) return;
         isDraggingMarker = false; draggedMarker.classList.remove('dragging');
-        const rect = document.getElementById('planoImage').getBoundingClientRect();
         const x = parseFloat(draggedMarker.style.left); const y = parseFloat(draggedMarker.style.top);
-        if (x < 0 || x > 100 || y < 0 || y > 100) { cargarDatos(); return; } // Si se suelta fuera, resetea
+        if (x < 0 || x > 100 || y < 0 || y > 100) { cargarDatos(); return; }
         actualizarEstado(`Guardando nueva ubicación para ${draggedMarker.dataset.id}...`, 'info');
         await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: draggedMarker.dataset.id, data: { PosX: x.toFixed(2), PosY: y.toFixed(2) } });
         Object.assign(motorSeleccionado, { PosX: x, PosY: y });
         actualizarEstado(`✅ Ubicación guardada.`, 'success');
+        renderizarListaCompleta();
     }
 
     function activarModoColocar() { if (!motorSeleccionado) return; modoPosicionar = true; document.getElementById('planoContainer').classList.add('placing-mode'); actualizarEstado(`MODO COLOCAR: Haga clic en la ubicación para ${motorSeleccionado.ID}.`, 'info'); }
@@ -255,7 +256,7 @@
         if (x_perc < 0 || x_perc > 100 || y_perc < 0 || y_perc > 100) { alert("Posición fuera del plano."); return; }
         actualizarEstado(`Guardando ubicación para ${motorSeleccionado.ID}...`, 'info');
         await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorSeleccionado.ID, data: { PosX: x_perc.toFixed(2), PosY: y_perc.toFixed(2) } });
-        await cargarDatos(); seleccionarMotor(motorSeleccionado.ID);
+        await cargarDatos(); seleccionarMotor(motorSeleccionado.ID, true);
         actualizarEstado(`✅ Ubicación guardada.`, 'success');
         modoPosicionar = false; document.getElementById('planoContainer').classList.remove('placing-mode');
     }
@@ -267,7 +268,7 @@
         await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorSeleccionado.ID, data: newData });
         Object.assign(motorSeleccionado, newData);
         renderizarMotores(); renderizarListaCompleta(); actualizarEstadisticas();
-        seleccionarMotor(motorSeleccionado.ID);
+        seleccionarMotor(motorSeleccionado.ID, false);
         actualizarEstado(`✅ Cambios guardados.`, 'success');
     }
     
