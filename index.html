@@ -19,9 +19,10 @@
       transform: translate(-50%, -50%); transition: all 0.2s ease;
       border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
     }
-    .motor-marker.completed { background-color: #10B981; color: white; }
-    .motor-marker.pending { background-color: #EF4444; color: white; }
-    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; }
+    /* === CAMBIO DE COLOR IMPLEMENTADO AQUÍ === */
+    .motor-marker.completed { background-color: #06B6D4; color: white; } /* Turquesa/Cian */
+    .motor-marker.pending { background-color: #EF4444; color: white; } /* Rojo */
+    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; } /* Amarillo */
     .motor-marker:hover, .motor-marker.selected { 
         transform: translate(-50%, -50%) scale(1.6); 
         z-index: 20; border-color: #3b82f6;
@@ -138,7 +139,6 @@
         document.getElementById('btnMoveMotor').addEventListener('click', activarModoMover);
         document.getElementById('btnRemovePlacement').addEventListener('click', quitarUbicacion);
         
-        // **LISTENER CORREGIDO**
         document.getElementById('motorImage').addEventListener('click', () => {
             if (motorSeleccionado && motorSeleccionado.ImagenURL && motorSeleccionado.ImagenURL.startsWith('http')) {
                 window.open(motorSeleccionado.ImagenURL, '_blank');
@@ -202,7 +202,7 @@
     }
 
     function renderizarListaCompleta() { const c = document.getElementById('fullMotorList'); c.innerHTML = ''; motores.forEach(m => { const p = !isNaN(m.PosX) && !isNaN(m.PosY); const i = document.createElement('div'); i.className = 'motor-list-item flex items-center justify-between p-2 rounded-md'; i.dataset.motorId = m.ID; i.innerHTML = `<div class="text-sm"><span class="font-bold">${m.ID}</span><span class="text-slate-600 truncate ml-2">${m.NombreZona || 'Sin zona'}</span></div><span class="${p ? 'text-green-500' : 'text-slate-400'}">${p ? '✔' : '✖'}</span>`; i.addEventListener('click', () => seleccionarMotor(m.ID, true)); c.appendChild(i); }); }
-    function actualizarEstadisticas() { const s = motores.reduce((a, m) => { let st = (m.Cumplimiento || '').toString().trim() || 'No'; a[st] = (a[st] || 0) + 1; return a; }, {}); document.getElementById('statsContainer').innerHTML = `<div class="flex justify-between items-center"><span class="font-semibold">Total:</span> <span class="font-bold text-lg">${motores.length}</span></div><hr class="my-2"><div class="flex justify-between items-center"><span class="text-green-600 font-semibold">● Cumplen:</span> <span class="font-bold">${s['Sí'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-red-600 font-semibold">● Pendientes:</span> <span class="font-bold">${s['No'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-yellow-500 font-semibold">● Mantenimiento:</span> <span class="font-bold">${s['En Mantenimiento'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-blue-600 font-semibold">● En Proceso:</span> <span class="font-bold">${s['En Proceso'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-gray-500 font-semibold">● N/A:</span> <span class="font-bold">${s['N/A'] || 0}</span></div>`; }
+    function actualizarEstadisticas() { const s = motores.reduce((a, m) => { let st = (m.Cumplimiento || '').toString().trim() || 'No'; a[st] = (a[st] || 0) + 1; return a; }, {}); document.getElementById('statsContainer').innerHTML = `<div class="flex justify-between items-center"><span class="font-semibold">Total:</span> <span class="font-bold text-lg">${motores.length}</span></div><hr class="my-2"><div class="flex justify-between items-center"><span class="text-cyan-500 font-semibold">● Cumplen:</span> <span class="font-bold">${s['Sí'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-red-600 font-semibold">● Pendientes:</span> <span class="font-bold">${s['No'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-yellow-500 font-semibold">● Mantenimiento:</span> <span class="font-bold">${s['En Mantenimiento'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-blue-600 font-semibold">● En Proceso:</span> <span class="font-bold">${s['En Proceso'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-gray-500 font-semibold">● N/A:</span> <span class="font-bold">${s['N/A'] || 0}</span></div>`; }
     function filtrarListaMotores(e) { const f = e.target.value.toLowerCase(); document.querySelectorAll('.motor-list-item').forEach(i => { i.style.display = i.textContent.toLowerCase().includes(f) ? 'flex' : 'none'; }); }
 
     function seleccionarMotor(motorId, scrollPanel = false) {
@@ -286,4 +286,3 @@
   </script>
 </body>
 </html>
-
