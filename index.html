@@ -15,13 +15,14 @@
       position: absolute; width: 14px; height: 14px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-weight: bold; font-size: 7px; line-height: 1;
-      cursor: grab;
+      cursor: pointer; /* Cambiado a pointer para indicar click */
       transform: translate(-50%, -50%); transition: all 0.2s ease;
       border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
     }
-    .motor-marker.dragging {
-        cursor: grabbing; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    .motor-marker.moving {
+        cursor: crosshair; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         transform: translate(-50%, -50%) scale(1.6); z-index: 1000;
+        pointer-events: none; /* El marcador no interfiere con el clic de soltar */
     }
     .motor-marker.completed { background-color: #10B981; color: white; }
     .motor-marker.pending { background-color: #EF4444; color: white; }
@@ -61,7 +62,7 @@
         <div class="bg-white rounded-2xl shadow-lg p-3 mb-4 flex justify-between items-center">
           <div>
             <h2 class="text-lg font-bold text-slate-800" id="lineaTitle"></h2>
-            <p class="text-slate-600 text-xs md:text-sm">Arrastre marcadores para moverlos. Use la rueda del ratón/gestos para zoom.</p>
+            <p class="text-slate-600 text-xs md:text-sm">Haga clic en un marcador para moverlo. Use zoom para más precisión.</p>
           </div>
           <div id="zoomControls" class="flex items-center gap-2">
              <span id="zoomLevel" class="text-sm font-semibold text-slate-600 w-16 text-center">100%</span>
@@ -126,9 +127,8 @@
     const PLANOS = { 'LINEA1': 'https://i.ibb.co/mFgffqxP/PLANO1.jpg', 'LINEA2': 'https://i.ibb.co/HTb9Vwph/PLANO2.jpg', 'LINEA3': 'https://i.ibb.co/ns0DSD90/PLANO3.jpg' };
     const ESTADOS_CUMPLIMIENTO = ['Sí', 'No', 'En Mantenimiento', 'En Proceso', 'N/A'];
     
-    let motores = [], motorSeleccionado = null, modoPosicionar = false;
+    let motores = [], motorSeleccionado = null, modoPosicionar = false, isMovingMarker = false, movingMarkerElement = null;
     let scale = 1, panX = 0, panY = 0, isPanning = false, startPanX, startPanY, clickStartX, clickStartY;
-    let isDraggingMarker = false, draggedMarker = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('lineaSelector').addEventListener('change', cambiarLinea);
@@ -141,7 +141,7 @@
         const planoContainer = document.getElementById('planoContainer');
         planoContainer.addEventListener('wheel', handleZoom, { passive: false });
         planoContainer.addEventListener('mousedown', startPan);
-        planoContainer.addEventListener('mousemove', handlePan);
+        planoContainer.addEventListener('mousemove', handleMouseMove);
         planoContainer.addEventListener('mouseup', endPan);
         planoContainer.addEventListener('mouseleave', endPan);
         planoContainer.addEventListener('click', manejarClicPlano, true);
@@ -155,8 +155,8 @@
 
     function applyTransform() { document.getElementById('transformWrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; document.getElementById('zoomLevel').textContent = `${Math.round(scale * 100)}%`; }
     function handleZoom(e) { e.preventDefault(); const oldScale = scale; const zoomFactor = 1.1; scale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor; scale = Math.max(0.2, Math.min(10, scale)); const rect = e.currentTarget.getBoundingClientRect(); const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top; panX = mouseX - (mouseX - panX) * (scale / oldScale); panY = mouseY - (mouseY - panY) * (scale / oldScale); applyTransform(); }
-    function startPan(e) { if (isDraggingMarker) return; isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY; clickStartX = e.clientX; clickStartY = e.clientY; }
-    function handlePan(e) { if (isPanning) { panX = e.clientX - startPanX; panY = e.clientY - startPanY; applyTransform(); } else if (isDraggingMarker) { handleMarkerDrag(e); } }
+    function startPan(e) { if (isMovingMarker) return; isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY; clickStartX = e.clientX; clickStartY = e.clientY; }
+    function handleMouseMove(e) { if (isPanning) { panX = e.clientX - startPanX; panY = e.clientY - startPanY; applyTransform(); } else if (isMovingMarker) { const rect = e.currentTarget.getBoundingClientRect(); movingMarkerElement.style.left = `${e.clientX - rect.left}px`; movingMarkerElement.style.top = `${e.clientY - rect.top}px`; } }
     function endPan(e) { if (Math.abs(e.clientX - clickStartX) > 5 || Math.abs(e.clientY - clickStartY) > 5) { e.stopPropagation(); } isPanning = false; }
     function resetZoom() { scale = 1; panX = 0; panY = 0; applyTransform(); }
     
@@ -189,8 +189,7 @@
             marcador.style.left = `${motor.PosX}%`; marcador.style.top = `${motor.PosY}%`;
             marcador.textContent = motor.ID.replace(/\D/g, ''); marcador.title = `${motor.ID}: ${motor.NombreZona}`;
             marcador.dataset.id = motor.ID; marcador.style.pointerEvents = 'auto';
-            marcador.addEventListener('mousedown', startMarkerDrag);
-            marcador.addEventListener('click', e => { e.stopPropagation(); seleccionarMotor(motor.ID, false); });
+            marcador.addEventListener('click', e => { e.stopPropagation(); handleMarkerClick(e.currentTarget); });
             contenedor.appendChild(marcador);
         });
     }
@@ -199,19 +198,13 @@
     function actualizarEstadisticas() { const s = motores.reduce((a, m) => { let st = (m.Cumplimiento || '').toString().trim() || 'No'; a[st] = (a[st] || 0) + 1; return a; }, {}); document.getElementById('statsContainer').innerHTML = `<div class="flex justify-between items-center"><span class="font-semibold">Total:</span> <span class="font-bold text-lg">${motores.length}</span></div><hr class="my-2"><div class="flex justify-between items-center"><span class="text-green-600 font-semibold">● Cumplen:</span> <span class="font-bold">${s['Sí'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-red-600 font-semibold">● Pendientes:</span> <span class="font-bold">${s['No'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-yellow-500 font-semibold">● Mantenimiento:</span> <span class="font-bold">${s['En Mantenimiento'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-blue-600 font-semibold">● En Proceso:</span> <span class="font-bold">${s['En Proceso'] || 0}</span></div><div class="flex justify-between items-center"><span class="text-gray-500 font-semibold">● N/A:</span> <span class="font-bold">${s['N/A'] || 0}</span></div>`; }
     function filtrarListaMotores(e) { const f = e.target.value.toLowerCase(); document.querySelectorAll('.motor-list-item').forEach(i => { i.style.display = i.textContent.toLowerCase().includes(f) ? 'flex' : 'none'; }); }
 
-    // **FUNCIÓN CORREGIDA**
     function seleccionarMotor(motorId, scrollPanel = false) {
         motorSeleccionado = motores.find(m => m.ID === motorId); if (!motorSeleccionado) return;
         document.querySelectorAll('.motor-marker, .motor-list-item').forEach(m => m.classList.remove('selected'));
         document.querySelector(`.motor-marker[data-id="${motorId}"]`)?.classList.add('selected');
         document.querySelector(`.motor-list-item[data-motor-id="${motorId}"]`)?.classList.add('selected');
         const panel = document.getElementById('motorDetailsPanel'); panel.classList.remove('hidden'); 
-        
-        // **LÓGICA CORREGIDA**: Solo hacer scroll si se llama desde la lista.
-        if (scrollPanel) {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-        
+        if (scrollPanel) { panel.scrollIntoView({ behavior: 'smooth', block: 'end' }); }
         panel.querySelector('#motorIdTitle').textContent = motorSeleccionado.ID; panel.querySelector('#motorNombreZona').value = motorSeleccionado.NombreZona || '';
         panel.querySelector('#motorEstado').innerHTML = ESTADOS_CUMPLIMIENTO.map(e => `<option value="${e}" ${e === (motorSeleccionado.Cumplimiento || 'No') ? 'selected' : ''}>${e}</option>`).join('');
         panel.querySelector('#motorObservaciones').value = motorSeleccionado.Observaciones || '';
@@ -221,44 +214,32 @@
         document.getElementById('btnRemovePlacement').classList.toggle('hidden', !isPlaced);
     }
 
-    function startMarkerDrag(e) {
-        e.stopPropagation(); isDraggingMarker = true; draggedMarker = e.currentTarget;
-        draggedMarker.classList.add('dragging'); 
-        seleccionarMotor(draggedMarker.dataset.id, false); // **CORREGIDO**: No hacer scroll al arrastrar
-        document.addEventListener('mouseup', endMarkerDrag, { once: true });
-    }
-    function handleMarkerDrag(e) {
-        if (!isDraggingMarker) return;
-        const rect = document.getElementById('planoImage').getBoundingClientRect();
-        const x = ((e.clientX - rect.left - panX) / scale) / (rect.width / 100);
-        const y = ((e.clientY - rect.top - panY) / scale) / (rect.height / 100);
-        draggedMarker.style.left = `${x}%`; draggedMarker.style.top = `${y}%`;
-    }
-    async function endMarkerDrag() {
-        if (!isDraggingMarker) return;
-        isDraggingMarker = false; draggedMarker.classList.remove('dragging');
-        const x = parseFloat(draggedMarker.style.left); const y = parseFloat(draggedMarker.style.top);
-        if (x < 0 || x > 100 || y < 0 || y > 100) { cargarDatos(); return; }
-        actualizarEstado(`Guardando nueva ubicación para ${draggedMarker.dataset.id}...`, 'info');
-        await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: draggedMarker.dataset.id, data: { PosX: x.toFixed(2), PosY: y.toFixed(2) } });
-        Object.assign(motorSeleccionado, { PosX: x, PosY: y });
-        actualizarEstado(`✅ Ubicación guardada.`, 'success');
-        renderizarListaCompleta();
+    function handleMarkerClick(markerElement) {
+        isMovingMarker = true; movingMarkerElement = markerElement.cloneNode(true);
+        movingMarkerElement.classList.add('moving'); document.getElementById('planoContainer').appendChild(movingMarkerElement);
+        markerElement.style.opacity = '0.3';
+        seleccionarMotor(markerElement.dataset.id, false);
+        actualizarEstado(`MODO MOVER: Haga clic en la nueva ubicación para ${markerElement.dataset.id}.`, 'info');
     }
 
     function activarModoColocar() { if (!motorSeleccionado) return; modoPosicionar = true; document.getElementById('planoContainer').classList.add('placing-mode'); actualizarEstado(`MODO COLOCAR: Haga clic en la ubicación para ${motorSeleccionado.ID}.`, 'info'); }
     async function quitarUbicacion() { if (!motorSeleccionado || !confirm(`¿Quitar la ubicación del motor ${motorSeleccionado.ID}?`)) return; actualizarEstado(`Quitando ubicación de ${motorSeleccionado.ID}...`, 'info'); await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorSeleccionado.ID, data: { PosX: '', PosY: '' } }); await cargarDatos(); actualizarEstado(`✅ Ubicación eliminada.`, 'success'); }
     async function manejarClicPlano(e) {
-        if (!modoPosicionar || !motorSeleccionado) return;
+        if (!modoPosicionar && !isMovingMarker) return;
         const rect = document.getElementById('planoImage').getBoundingClientRect();
         const x_perc = ((e.clientX - rect.left - panX) / (scale * rect.width)) * 100;
         const y_perc = ((e.clientY - rect.top - panY) / (scale * rect.height)) * 100;
-        if (x_perc < 0 || x_perc > 100 || y_perc < 0 || y_perc > 100) { alert("Posición fuera del plano."); return; }
-        actualizarEstado(`Guardando ubicación para ${motorSeleccionado.ID}...`, 'info');
-        await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorSeleccionado.ID, data: { PosX: x_perc.toFixed(2), PosY: y_perc.toFixed(2) } });
-        await cargarDatos(); seleccionarMotor(motorSeleccionado.ID, true);
+        if (x_perc < 0 || x_perc > 100 || y_perc < 0 || y_perc > 100) { if (isMovingMarker) { movingMarkerElement.remove(); cargarDatos(); } isMovingMarker = false; modoPosicionar = false; return; }
+        
+        const motorId = motorSeleccionado.ID;
+        actualizarEstado(`Guardando ubicación para ${motorId}...`, 'info');
+        await guardarDatosEnSheet({ action: 'update_motor', linea: document.getElementById('lineaSelector').value, motorId: motorId, data: { PosX: x_perc.toFixed(2), PosY: y_perc.toFixed(2) } });
+        
+        if (isMovingMarker) { movingMarkerElement.remove(); isMovingMarker = false; }
+        if (modoPosicionar) { modoPosicionar = false; document.getElementById('planoContainer').classList.remove('placing-mode'); }
+        
+        await cargarDatos(); seleccionarMotor(motorId, true);
         actualizarEstado(`✅ Ubicación guardada.`, 'success');
-        modoPosicionar = false; document.getElementById('planoContainer').classList.remove('placing-mode');
     }
 
     async function guardarCambiosMotor() {
