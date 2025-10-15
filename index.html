@@ -93,7 +93,11 @@
         <div id="motorDetailsPanel" class="bg-white rounded-2xl shadow-lg p-4 border hidden">
           <h3 class="font-bold text-slate-800 text-lg mb-3">⚙️ Detalles: <span id="motorIdTitle" class="text-blue-600"></span></h3>
           <div class="space-y-3">
-            <div class="text-center bg-slate-100 rounded-lg p-2"><img id="motorImage" class="max-h-32 mx-auto rounded cursor-pointer" /></div>
+            <div class="text-center bg-slate-100 rounded-lg p-2">
+                <a id="motorImageLink" href="#" target="_blank" rel="noopener noreferrer">
+                    <img id="motorImage" class="max-h-32 mx-auto rounded cursor-pointer" />
+                </a>
+            </div>
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1">Nombre de Zona:</label>
               <input type="text" id="motorNombreZona" class="w-full border rounded-xl px-3 py-2 text-sm bg-slate-50" readonly />
@@ -202,10 +206,29 @@
         document.querySelector(`.motor-list-item[data-motor-id="${motorId}"]`)?.classList.add('selected');
         const panel = document.getElementById('motorDetailsPanel'); panel.classList.remove('hidden'); 
         if (scrollPanel) { panel.scrollIntoView({ behavior: 'smooth', block: 'end' }); }
-        panel.querySelector('#motorIdTitle').textContent = motorSeleccionado.ID; panel.querySelector('#motorNombreZona').value = motorSeleccionado.NombreZona || '';
+        
+        panel.querySelector('#motorIdTitle').textContent = motorSeleccionado.ID;
+        panel.querySelector('#motorNombreZona').value = motorSeleccionado.NombreZona || '';
         panel.querySelector('#motorEstado').innerHTML = ESTADOS_CUMPLIMIENTO.map(e => `<option value="${e}" ${e === (motorSeleccionado.Cumplimiento || 'No') ? 'selected' : ''}>${e}</option>`).join('');
         panel.querySelector('#motorObservaciones').value = motorSeleccionado.Observaciones || '';
-        let imgUrl = motorSeleccionado.ImagenURL || ''; if (imgUrl.includes('drive.google.com')) { const fileId = (imgUrl.match(/d\/(.+?)\//) || [])[1]; imgUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : ''; } panel.querySelector('#motorImage').src = imgUrl || 'https://via.placeholder.com/300x100?text=Sin+Imagen';
+        
+        const imageLink = panel.querySelector('#motorImageLink');
+        const imageEl = panel.querySelector('#motorImage');
+        let originalUrl = motorSeleccionado.ImagenURL || '';
+        let previewUrl = 'https://via.placeholder.com/300x100?text=Sin+Imagen';
+
+        if (originalUrl.includes('drive.google.com')) {
+            const fileId = (originalUrl.match(/d\/(.+?)\//) || [])[1];
+            if (fileId) {
+                previewUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+            }
+        } else if (originalUrl.startsWith('http')) {
+            previewUrl = originalUrl;
+        }
+        
+        imageLink.href = originalUrl.startsWith('http') ? originalUrl : '#';
+        imageEl.src = previewUrl;
+        
         const isPlaced = !isNaN(motorSeleccionado.PosX) && !isNaN(motorSeleccionado.PosY);
         document.getElementById('btnPlaceMotor').classList.toggle('hidden', isPlaced);
         document.getElementById('btnMoveMotor').classList.toggle('hidden', !isPlaced);
@@ -252,4 +275,3 @@
   </script>
 </body>
 </html>
-
