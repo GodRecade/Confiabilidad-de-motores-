@@ -12,14 +12,21 @@
     #transformWrapper { transform-origin: 0 0; transition: transform 0.1s linear; }
     #planoImage, #motoresContainer { user-select: none; -webkit-user-drag: none; }
     .motor-marker {
-      position: absolute; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 7px; line-height: 1; cursor: pointer; transform: translate(-50%, -50%);
-      transition: all 0.2s ease; border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 7px; line-height: 1;
+      cursor: pointer;
+      transform: translate(-50%, -50%); transition: all 0.2s ease;
+      border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
     }
-    .motor-marker.completed { background-color: #A3E635; color: #1a2e05; }
-    .motor-marker.pending { background-color: #EF4444; color: white; }
-    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; }
-    .motor-marker:hover, .motor-marker.selected { transform: translate(-50%, -50%) scale(1.6); z-index: 20; border-color: #3b82f6; }
+    /* === COLOR CORREGIDO A VERDE LIMA === */
+    .motor-marker.completed { background-color: #A3E635; color: #1a2e05; } /* Verde Lima Brillante */
+    .motor-marker.pending { background-color: #EF4444; color: white; } /* Rojo */
+    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; } /* Amarillo */
+    .motor-marker:hover, .motor-marker.selected { 
+        transform: translate(-50%, -50%) scale(1.6); 
+        z-index: 20; border-color: #3b82f6;
+    }
     #planoContainer.placing-mode, #planoContainer.moving-mode { cursor: crosshair !important; }
     .motor-list-item { cursor: pointer; transition: background-color 0.2s; }
     .motor-list-item:hover, .motor-list-item.selected { background-color: #e2e8f0; }
@@ -45,24 +52,15 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA1')">
           <img src="https://i.ibb.co/6R5v54Z/Gemini-Generated-Image-3fartz3fartz3far.png" class="w-full h-48 object-cover">
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-slate-900">Línea de Producción 1</h3>
-            <p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 1.</p>
-          </div>
+          <div class="p-6"><h3 class="text-xl font-bold text-slate-900">Línea de Producción 1</h3><p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 1.</p></div>
         </div>
         <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA2')">
           <img src="https://i.ibb.co/fzPhZx6/Gemini-Generated-Image-pdm83cpdm83cpdm8.png" class="w-full h-48 object-cover">
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-slate-900">Línea de Producción 2</h3>
-            <p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 2.</p>
-          </div>
+          <div class="p-6"><h3 class="text-xl font-bold text-slate-900">Línea de Producción 2</h3><p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 2.</p></div>
         </div>
         <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA3')">
           <img src="https://i.ibb.co/6R5v54Z/Gemini-Generated-Image-3fartz3fartz3far.png" class="w-full h-48 object-cover">
-          <div class="p-6">
-            <h3 class="text-xl font-bold text-slate-900">Línea de Producción 3</h3>
-            <p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 3.</p>
-          </div>
+          <div class="p-6"><h3 class="text-xl font-bold text-slate-900">Línea de Producción 3</h3><p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 3.</p></div>
         </div>
       </div>
     </main>
@@ -73,10 +71,7 @@
       <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
         <div class="flex items-center gap-4">
           <img src="https://i.ibb.co/Lh1fbHTG/envases.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
-          <div>
-              <h1 class="text-xl md:text-2xl font-bold tracking-tight">Confiabilidad de Motores</h1>
-              <p class="hidden md:block text-sm font-light text-red-100">Líneas de producción (transportes)</p>
-          </div>
+          <div><h1 class="text-xl md:text-2xl font-bold tracking-tight">Confiabilidad de Motores</h1><p class="hidden md:block text-sm font-light text-red-100">Líneas de producción (transportes)</p></div>
         </div>
         <button id="btnBackToHome" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg">❮ Cambiar de Línea</button>
       </div>
@@ -87,12 +82,7 @@
         <div class="lg:col-span-2 xl:col-span-3">
           <div class="bg-white rounded-2xl shadow-lg p-3 mb-4 flex justify-between items-center">
             <div><h2 class="text-lg font-bold text-slate-800" id="lineaTitle"></h2><p class="text-slate-600 text-xs md:text-sm">Use el botón "Mover" para reubicar marcadores. Use zoom para más precisión.</p></div>
-            <div id="zoomControls" class="flex items-center gap-2">
-               <span id="zoomLevel" class="text-sm font-semibold text-slate-600 w-16 text-center">100%</span>
-               <button id="zoomOut" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">-</button>
-               <button id="zoomIn" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">+</button>
-               <button id="zoomReset" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">⌂</button>
-            </div>
+            <div id="zoomControls" class="flex items-center gap-2"><span id="zoomLevel" class="text-sm font-semibold text-slate-600 w-16 text-center">100%</span><button id="zoomOut" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">-</button><button id="zoomIn" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">+</button><button id="zoomReset" class="font-bold bg-slate-200 hover:bg-slate-300 rounded-md p-2 w-8 h-8 flex items-center justify-center">⌂</button></div>
           </div>
           <div class="bg-white rounded-2xl shadow-lg overflow-hidden"><div id="planoContainer" class="relative h-[50vh] lg:h-[75vh] overflow-hidden bg-slate-100"><div id="transformWrapper"><img id="planoImage" draggable="false" class="h-auto object-contain min-h-full" src="" alt="Plano de Línea" /><div id="motoresContainer" style="position:absolute; inset:0; pointer-events:none;"></div></div></div></div>
         </div>
@@ -102,7 +92,7 @@
           <div id="motorDetailsPanel" class="bg-white rounded-2xl shadow-lg p-4 border hidden">
             <h3 class="font-bold text-slate-800 text-lg mb-3">⚙️ Detalles: <span id="motorIdTitle" class="text-blue-600"></span></h3>
             <div class="space-y-3">
-              <div class="text-center bg-slate-100 rounded-lg p-2"><img id="motorImage" class="max-h-32 mx-auto rounded" /><p id="imageCaption" class="text-xs text-slate-500 mt-1 hidden">Clic para ver la placa del motor</p></div>
+              <div class="text-center bg-slate-100 rounded-lg p-2"><a id="motorImageLink" href="#" target="_blank" rel="noopener noreferrer"><img id="motorImage" class="max-h-32 mx-auto rounded" /></a><p id="imageCaption" class="text-xs text-slate-500 mt-1 hidden">Clic para ver la placa del motor</p></div>
               <div><label class="block text-xs font-medium text-slate-700 mb-1">Nombre de Zona:</label><input type="text" id="motorNombreZona" class="w-full border rounded-xl px-3 py-2 text-sm bg-slate-50" readonly /></div>
               <div><label class="block text-xs font-medium text-slate-700 mb-1">Estado:</label><select id="motorEstado" class="w-full border rounded-xl px-3 py-2 text-sm"></select></div>
               <div><label class="block text-xs font-medium text-slate-700 mb-1">Observaciones:</label><textarea id="motorObservaciones" rows="2" class="w-full border rounded-xl px-3 py-2 text-sm"></textarea></div>
@@ -132,8 +122,6 @@
         document.getElementById('btnRemovePlacement').addEventListener('click', quitarUbicacion);
         document.getElementById('btnBackToHome').addEventListener('click', mostrarHome);
         
-        document.getElementById('motorImage').addEventListener('click', () => { if (motorSeleccionado && motorSeleccionado.ImagenURL && motorSeleccionado.ImagenURL.startsWith('http')) { window.open(motorSeleccionado.ImagenURL, '_blank'); } });
-
         const planoContainer = document.getElementById('planoContainer');
         planoContainer.addEventListener('wheel', handleZoom, { passive: false });
         planoContainer.addEventListener('mousedown', startPan);
@@ -147,21 +135,8 @@
         document.getElementById('zoomReset').addEventListener('click', resetZoom);
     });
 
-    function seleccionarLinea(linea) {
-        currentLine = linea;
-        document.getElementById('homeScreen').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        document.getElementById('lineaTitle').textContent = `Línea de Producción ${linea.slice(-1)}`;
-        document.getElementById('planoImage').src = PLANOS[linea] || '';
-        resetZoom();
-        cargarDatos(linea);
-    }
-    
-    function mostrarHome() {
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('homeScreen').classList.remove('hidden');
-        currentLine = null;
-    }
+    function seleccionarLinea(linea) { currentLine = linea; document.getElementById('homeScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); document.getElementById('lineaTitle').textContent = `Línea de Producción ${linea.slice(-1)}`; document.getElementById('planoImage').src = PLANOS[linea] || ''; resetZoom(); cargarDatos(linea); }
+    function mostrarHome() { document.getElementById('mainApp').classList.add('hidden'); document.getElementById('homeScreen').classList.remove('hidden'); currentLine = null; }
 
     function applyTransform() { document.getElementById('transformWrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; document.getElementById('zoomLevel').textContent = `${Math.round(scale * 100)}%`; }
     function handleZoom(e) { e.preventDefault(); const oldScale = scale; const zoomFactor = 1.1; scale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor; scale = Math.max(0.2, Math.min(10, scale)); const rect = e.currentTarget.getBoundingClientRect(); const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top; panX = mouseX - (mouseX - panX) * (scale / oldScale); panY = mouseY - (mouseY - panY) * (scale / oldScale); applyTransform(); }
@@ -219,6 +194,7 @@
         panel.querySelector('#motorEstado').innerHTML = ESTADOS_CUMPLIMIENTO.map(e => `<option value="${e}" ${e === (motorSeleccionado.Cumplimiento || 'No') ? 'selected' : ''}>${e}</option>`).join('');
         panel.querySelector('#motorObservaciones').value = motorSeleccionado.Observaciones || '';
         
+        const imageLink = panel.querySelector('#motorImageLink');
         const imageEl = panel.querySelector('#motorImage');
         const imageCaption = panel.querySelector('#imageCaption');
         let originalUrl = motorSeleccionado.ImagenURL || '';
@@ -232,13 +208,14 @@
         }
         
         imageEl.src = previewUrl;
+        imageLink.href = originalUrl.startsWith('http') ? originalUrl : '#';
         
         if (originalUrl.startsWith('http')) {
             imageCaption.classList.remove('hidden');
-            imageEl.classList.add('cursor-pointer');
+            imageLink.style.cursor = 'pointer';
         } else {
             imageCaption.classList.add('hidden');
-            imageEl.classList.remove('cursor-pointer');
+            imageLink.style.cursor = 'default';
         }
         
         const isPlaced = !isNaN(motorSeleccionado.PosX) && !isNaN(motorSeleccionado.PosY);
@@ -288,4 +265,5 @@
   </script>
 </body>
 </html>
+
 
