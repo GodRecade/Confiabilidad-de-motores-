@@ -12,21 +12,14 @@
     #transformWrapper { transform-origin: 0 0; transition: transform 0.1s linear; }
     #planoImage, #motoresContainer { user-select: none; -webkit-user-drag: none; }
     .motor-marker {
-      position: absolute; width: 14px; height: 14px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 7px; line-height: 1;
-      cursor: pointer;
-      transform: translate(-50%, -50%); transition: all 0.2s ease;
-      border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
+      position: absolute; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 7px; line-height: 1; cursor: pointer; transform: translate(-50%, -50%);
+      transition: all 0.2s ease; border: 1px solid white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); z-index: 10;
     }
-    /* === COLOR CORREGIDO A VERDE LIMA === */
-    .motor-marker.completed { background-color: #A3E635; color: #1a2e05; } /* Verde Lima Brillante */
-    .motor-marker.pending { background-color: #EF4444; color: white; } /* Rojo */
-    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; } /* Amarillo */
-    .motor-marker:hover, .motor-marker.selected { 
-        transform: translate(-50%, -50%) scale(1.6); 
-        z-index: 20; border-color: #3b82f6;
-    }
+    .motor-marker.completed { background-color: #A3E635; color: #1a2e05; }
+    .motor-marker.pending { background-color: #EF4444; color: white; }
+    .motor-marker.maintenance { background-color: #FBBF24; color: #422006; }
+    .motor-marker:hover, .motor-marker.selected { transform: translate(-50%, -50%) scale(1.6); z-index: 20; border-color: #3b82f6; }
     #planoContainer.placing-mode, #planoContainer.moving-mode { cursor: crosshair !important; }
     .motor-list-item { cursor: pointer; transition: background-color 0.2s; }
     .motor-list-item:hover, .motor-list-item.selected { background-color: #e2e8f0; }
@@ -40,7 +33,7 @@
   <section id="homeScreen">
     <header class="bg-gradient-to-r from-red-800 to-red-700 text-white shadow-lg">
       <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
-        <img src="https://i.ibb.co/Lh1fbHTG/envases.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
+        <img src="images/logo.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
         <div>
           <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Confiabilidad de Motores</h1>
           <p class="text-sm font-light text-red-100">Líneas de producción (transportes)</p>
@@ -51,15 +44,15 @@
       <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">Seleccione una Línea de Producción</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA1')">
-          <img src="https://i.ibb.co/6R5v54Z/Gemini-Generated-Image-3fartz3fartz3far.png" class="w-full h-48 object-cover">
+          <img src="images/portada-1.png" class="w-full h-48 object-cover">
           <div class="p-6"><h3 class="text-xl font-bold text-slate-900">Línea de Producción 1</h3><p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 1.</p></div>
         </div>
         <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA2')">
-          <img src="https://i.ibb.co/fzPhZx6/Gemini-Generated-Image-pdm83cpdm83cpdm8.png" class="w-full h-48 object-cover">
+          <img src="images/portada-2.png" class="w-full h-48 object-cover">
           <div class="p-6"><h3 class="text-xl font-bold text-slate-900">Línea de Producción 2</h3><p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 2.</p></div>
         </div>
         <div class="line-card bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer" onclick="seleccionarLinea('LINEA3')">
-          <img src="https://i.ibb.co/6R5v54Z/Gemini-Generated-Image-3fartz3fartz3far.png" class="w-full h-48 object-cover">
+          <img src="images/portada-1.png" class="w-full h-48 object-cover">
           <div class="p-6"><h3 class="text-xl font-bold text-slate-900">Línea de Producción 3</h3><p class="text-slate-600 mt-2">Gestionar y visualizar los motores de la Línea 3.</p></div>
         </div>
       </div>
@@ -70,7 +63,7 @@
     <header class="bg-gradient-to-r from-red-800 to-red-700 text-white shadow-lg sticky top-0 z-50">
       <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <img src="https://i.ibb.co/Lh1fbHTG/envases.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
+          <img src="images/logo.jpg" alt="Logo Empresa" class="h-16 w-16 rounded-md object-cover">
           <div><h1 class="text-xl md:text-2xl font-bold tracking-tight">Confiabilidad de Motores</h1><p class="hidden md:block text-sm font-light text-red-100">Líneas de producción (transportes)</p></div>
         </div>
         <button id="btnBackToHome" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg">❮ Cambiar de Línea</button>
@@ -265,5 +258,3 @@
   </script>
 </body>
 </html>
-
-
