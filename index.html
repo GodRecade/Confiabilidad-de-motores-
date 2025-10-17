@@ -41,7 +41,7 @@
       </div>
     </header>
     <main class="max-w-6xl mx-auto p-8 text-center">
-      <h2 class="text-3xl font-bold text-slate-800 mb-6">Bienvenido al Sistema de Gestión de Confiabilidad de Motores</h2>
+      <h2 class="text-3xl font-bold text-slate-800 mb-6">Bienvenido al Sistema de Gestión</h2>
       <p class="text-slate-600 mb-8 max-w-2xl mx-auto">Visualice el estado de los motores, actualice su mantenimiento y gestione la confiabilidad de cada línea de producción de forma interactiva.</p>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
@@ -140,7 +140,25 @@
     function mostrarHome() { document.getElementById('mainApp').classList.add('hidden'); document.getElementById('homeScreen').classList.remove('hidden'); currentLine = null; }
 
     function applyTransform() { document.getElementById('transformWrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; document.getElementById('zoomLevel').textContent = `${Math.round(scale * 100)}%`; }
-    function handleZoom(e) { e.preventDefault(); const oldScale = scale; const zoomFactor = 1.1; scale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor; scale = Math.max(0.2, Math.min(10, scale)); const rect = e.currentTarget.getBoundingClientRect(); const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top; panX = mouseX - (mouseX - panX) * (scale / oldScale); panY = mouseY - (mouseY - panY) * (scale / oldScale); applyTransform(); }
+    
+    // **FUNCIÓN DE ZOOM CORREGIDA**
+    function handleZoom(e) {
+        e.preventDefault();
+        const planoContainer = document.getElementById('planoContainer'); // Referencia directa
+        const oldScale = scale;
+        const zoomFactor = 1.1;
+        scale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
+        scale = Math.max(0.2, Math.min(10, scale));
+        
+        const rect = planoContainer.getBoundingClientRect(); // Usar la referencia directa
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        panX = mouseX - (mouseX - panX) * (scale / oldScale);
+        panY = mouseY - (mouseY - panY) * (scale / oldScale);
+        applyTransform();
+    }
+
     function startPan(e) { if (isMovingMarker || modoPosicionar) return; isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY; clickStartX = e.clientX; clickStartY = e.clientY; }
     function handlePan(e) { if (isPanning) { panX = e.clientX - startPanX; panY = e.clientY - startPanY; applyTransform(); } }
     function endPan(e) { if (Math.abs(e.clientX - clickStartX) > 5 || Math.abs(e.clientY - clickStartY) > 5) { e.stopPropagation(); } isPanning = false; }
@@ -266,4 +284,3 @@
   </script>
 </body>
 </html>
-
